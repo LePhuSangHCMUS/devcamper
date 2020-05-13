@@ -4,7 +4,6 @@ const dotenv = require("dotenv");
 const routerBootcamps= require("./routes/bootcamps")
 
 dotenv.config({ path: "./config/config.env" });
-console.log(process.env.NODE_ENV);
 
 var app = express();
 app.use('/api/v1/', routerBootcamps)

@@ -1,9 +1,15 @@
 const mongoose = require('mongoose');
+//Generator slug to name
+
+const slugify=require("slugify");
+//Geocoder
+const geocoder = require("../ultis/geocoder")
+
 var Schema = mongoose.Schema;
-const pointSchema = new Schema({
+const PointSchema = new Schema({
     type: {
       type: String,
-      enum: ['Point'],
+    //   enum: ['Point'],
       required: true
     },
     coordinates: {
@@ -18,7 +24,7 @@ const pointSchema = new Schema({
     zipcode:String,
     country:String
   });
-const bootcampSchema =new Schema({
+const BootcampSchema =new Schema({
      name:{
         type: String,
         required:[true,'Please add a name'],
@@ -51,7 +57,7 @@ const bootcampSchema =new Schema({
          required:[true,"Please add an address"]
      },
      location:{
-        type:pointSchema,
+        type:PointSchema,
         require:true,
      },
      careers:{
@@ -98,4 +104,26 @@ const bootcampSchema =new Schema({
          default:Date.now()
      }
     });
-    module.exports=mongoose.model("Bootcamp",bootcampSchema)
+    //create  slug field
+    BootcampSchema.pre("save",function(next){
+        this.slug=slugify(this.name,{lower:true});
+         next();
+    })
+    //Geocoder & create  location field
+    BootcampSchema.pre("save",async function(next){
+
+        const location=await geocoder.geocode(this.address);
+        this.location={
+            type:"Point",
+            coordinates:[location[0].longitude,location[0].latitude],
+            formattedAddress:location[0].streetName,
+            city:location[0].city,
+            state:location[0].stateCode,
+            zipcode:location[0].zipcode,
+            country:location[0].countryCode
+        }
+        //Do not save address in DB
+        this.address=undefined;//====location =null
+        next();
+    })
+    module.exports=mongoose.model("Bootcamp",BootcampSchema)

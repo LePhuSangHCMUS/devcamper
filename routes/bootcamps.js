@@ -13,7 +13,7 @@ const {getBootcamps,getBootcamp,createBootcamp,updateBootcamp,deleteBootcamp,err
 
 //OR 
 router.
-route("bootcamps")
+route("/bootcamps")
 .get(getBootcamps)
 .post(createBootcamp);
 router.

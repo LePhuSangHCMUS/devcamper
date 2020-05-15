@@ -2,7 +2,19 @@
 const statusCodes=require("../config/statusCodes")
 //DEFINE MODEL
 const Bootcamp=require("../models/Bootcamp")
+//ERROR HANDLER
+const ErrorResponse=require("../ultis/errorResponse")
 
+
+
+
+
+
+
+
+
+
+//=======================================MAIN========================================
 //@Desc    : Get all bootcamps
 //@Route   : GET /api/v1/bootcamps
 //@Access  : Public
@@ -11,19 +23,12 @@ exports.getBootcamps= async (req, res,next)=> {
   const bootcamps= await Bootcamp.find();
   res.status(statusCodes.OK).json({
    success: true,
-   msg: "Get all  bootcamps success",
    count:bootcamps.length,
    data:bootcamps,
 
  });
- }catch(exception){
-   res.status(statusCodes.BAD_REQUEST).json({
-     success: false,
-     msg: "Get all  bootcamps fail",
-     err: exception,
-
-
-   });
+ }catch(err){
+    next(new ErrorResponse(statusCodes.NOT_FOUND,err.message))
  }
 }
 //@Desc    : Get single bootcamp
@@ -34,25 +39,17 @@ const id=req.params.id
  try{
   const bootcamp= await Bootcamp.findById(id);
   if(!bootcamp){
-    res.status(statusCodes.BAD_REQUEST).json({
-      success: false,
-      msg: "Get single  bootcamp fail",
-    });
+    next(new ErrorResponse(statusCodes.NOT_FOUND,`Bootcamp not found with id of ${id}`))
   }
   res.status(statusCodes.OK).json({
     success: true,
-    msg: "Get single  bootcamp success",
     data:bootcamp
   });
 
- }catch(exception){
-   res.status(statusCodes.BAD_REQUEST).json({
-     success: false,
-     msg: "Get single  bootcamp fail",
-     err: exception,
+ }catch(err){
 
-   });
- }
+  next(new ErrorResponse(statusCodes.NOT_FOUND,`Bootcamp not found with id of ${id}`))
+}
 }
 //@Desc    : Create new bootcamp
 //@Route   : POST /api/v1/bootcamps/:id
@@ -63,18 +60,10 @@ exports.createBootcamp=    async (req, res,next)=> {
    const bootcamp= await Bootcamp.create(req.body);
    res.status(statusCodes.CREATED).json({
     success: true,
-    msg: "Create new bootcamp success",
     data:bootcamp,
-
   });
-  }catch(exception){
-    res.status(statusCodes.BAD_REQUEST).json({
-      success: false,
-      msg: "Create new bootcamp fail",
-      err: exception,
-
-
-    });
+  }catch(err){
+    next(new ErrorResponse(statusCodes.BAD_REQUEST,err.message))
   }
 
 }
@@ -90,23 +79,15 @@ exports.updateBootcamp= async (req, res,next)=> {
       runValidators:true
     })
     if(!bootcamp){
-      res.status(statusCodes.OK).json({
-        success: false,
-        msg: "Update bootcamp fail - Not Found Bootcamp",
-      });
+      next(new ErrorResponse(statusCodes.BAD_REQUEST,`Bootcamp not found with id of ${id}`))
+
     }
     res.status(statusCodes.OK).json({
      success: true,
-     msg: "Update bootcamp success",
      data:bootcamp,
    });
-   }catch(exception){
-     res.status(statusCodes.BAD_REQUEST).json({
-       success: false,
-       msg: "Update bootcamp fail",
-       err: exception,
- 
-     });
+   }catch(err){
+    next(new ErrorResponse(statusCodes.BAD_REQUEST,err.message))
    }
 }
 //@Desc    : Delete bootcamp

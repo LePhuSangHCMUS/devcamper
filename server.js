@@ -7,8 +7,9 @@ const routerBootcamps= require("./routes/bootcamps")
 //=========Load env Vars=======================
 dotenv.config({ path: "./config/config.env" });
 //=========Middleware ==================
-// const logger= require("./middlewares/logger")
-const morgan= require("morgan")
+const errorHandler= require("./middlewares/errorHandler")
+const morgan= require("morgan");
+
 
 //=========Color============
 var colors = require('colors');
@@ -33,7 +34,8 @@ app.use(express.json({type:'application/json'}));
 //2.Mount route
 app.use('/api/v1/',routerBootcamps)
 
-
+//3.Handle Error Middleware
+app.use(errorHandler)
 
 
 

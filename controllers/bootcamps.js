@@ -3,7 +3,8 @@ const statusCodes=require("../config/statusCodes")
 //DEFINE MODEL
 const Bootcamp=require("../models/Bootcamp")
 //ERROR HANDLER
-const ErrorResponse=require("../ultis/errorResponse")
+const ErrorResponse=require("../ultis/errorResponse");
+const { json } = require("express");
 
 
 
@@ -19,10 +20,76 @@ const ErrorResponse=require("../ultis/errorResponse")
 //@Route   : GET /api/v1/bootcamps
 //@Access  : Public
 exports.getBootcamps= async (req, res,next)=> {
+ 
+  console.log("req.query : ");
+  console.log(req.query);
+
+  // Copy req.body
+  let reqQuery ={ ...req.query};
+  //Field to exclude
+  const removeFields=['select','sort','page',"limit"];
+
+  //Loop over  remove Fields and delete  them  from reqQuery;
+  removeFields.map(param=>{
+    delete reqQuery[param];
+  })
+
+
+
+
+  //=========================Create string select fields=====================
+  const fieldsSelect=req.query.select?req.query.select.split(",").join(" "):"";
+
+
+  //=========================Create sort ====================================
+  const sortBy=req.query.sort?{[req.query.sort]:1}:{createAt:1}; //1 or a : asc , -1 or d : desc
+  console.log("sortBy : ");
+  console.log(sortBy);
+
+
+  //==========================Create pagination==============================
+  const page=req.query.page?parseInt(req.query.page):1;
+  const limitPerPage =req.query.limit?parseInt(req.query.limit):10000;
+  const skipBootcamp=limitPerPage*page - limitPerPage;
+
+
+  console.log('Limit & Page : ' + "\n" + limitPerPage + " & " + page);
+  
+
+
+
+
+  // Create Query String
+  let queryString=JSON.stringify(reqQuery);
+
+
+
+
+  //1. Create  operator ($gt, $lt, $gte) in mongoose==> Because in mongoose query is {property:{$lt:value}} , req.body is {property:{lt:value}} 
+  reqQuery=queryString.replace(/\b(gt|gte|lt|lte|in)\b/g,match=>{
+    return `$${match}`;
+  })
+  //Creat queryFormat JSON
+  let queryFormat=JSON.parse(queryString);
+
+  console.log("queryFormat : ");
+  console.log(queryFormat);
+
+  //2. Select Filed req.body same  as api/select=name,description
+
  try{
-  const bootcamps= await Bootcamp.find();
+  //Find Resource
+  const bootcamps= await Bootcamp
+  .find(queryFormat)
+  .select(fieldsSelect)
+  .sort(sortBy)
+  .limit(limitPerPage)
+  .skip(skipBootcamp)
+  //Count total Resource
+  const total=await Bootcamp.countDocuments();
   res.status(statusCodes.OK).json({
    success: true,
+   total:total,
    count:bootcamps.length,
    data:bootcamps,
 
@@ -31,6 +98,13 @@ exports.getBootcamps= async (req, res,next)=> {
     next(new ErrorResponse(statusCodes.NOT_FOUND,err.message))
  }
 }
+
+
+
+
+
+
+
 //@Desc    : Get single bootcamp
 //@Route   : GET /api/v1/bootcamps/:id
 //@Access  : Private

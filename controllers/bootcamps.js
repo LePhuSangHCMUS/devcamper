@@ -16,7 +16,9 @@ const { json } = require("express");
 
 
 //=======================================MAIN========================================
-//@Desc    : Get all bootcamps
+
+//=======================================API #1======================================
+//@Desc    : Get all bootcamps (include : select fields , sort , filter, pagination)
 //@Route   : GET /api/v1/bootcamps
 //@Access  : Public
 exports.getBootcamps= async (req, res,next)=> {
@@ -85,6 +87,8 @@ exports.getBootcamps= async (req, res,next)=> {
   .sort(sortBy)
   .limit(limitPerPage)
   .skip(skipBootcamp)
+  .populate('courses')
+  .exec()
   //Count total Resource
   const total=await Bootcamp.countDocuments();
   res.status(statusCodes.OK).json({
@@ -95,7 +99,7 @@ exports.getBootcamps= async (req, res,next)=> {
 
  });
  }catch(err){
-    next(new ErrorResponse(statusCodes.NOT_FOUND,err.message))
+    return next(new ErrorResponse(statusCodes.NOT_FOUND,err.message))
  }
 }
 
@@ -104,29 +108,35 @@ exports.getBootcamps= async (req, res,next)=> {
 
 
 
-
+//=======================================API #2======================================
 //@Desc    : Get single bootcamp
 //@Route   : GET /api/v1/bootcamps/:id
 //@Access  : Private
 exports.getBootcamp= async function (req, res,next) {
-const id=req.params.id
+const id=req.params.id;
+ console.log(id);
+ 
  try{
   const bootcamp= await Bootcamp.findById(id);
   if(!bootcamp){
-    next(new ErrorResponse(statusCodes.NOT_FOUND,`Bootcamp not found with id of ${id}`))
+    return next(new ErrorResponse(statusCodes.NOT_FOUND,`Bootcamp not found with id of ${id}`))
   }
-  res.status(statusCodes.OK).json({
-    success: true,
-    data:bootcamp
-  });
+    res.status(statusCodes.OK).json({
+      success: true,
+      data:bootcamp
+    });
+
 
  }catch(err){
 
-  next(new ErrorResponse(statusCodes.NOT_FOUND,`Bootcamp not found with id of ${id}`))
+  return next(new ErrorResponse(statusCodes.NOT_FOUND,`Bootcamp not found with id of ${id}`))
 }
 }
+
+//=======================================API #3======================================
+
 //@Desc    : Create new bootcamp
-//@Route   : POST /api/v1/bootcamps/:id
+//@Route   : POST /api/v1/bootcamps
 //@Access  : Private
 exports.createBootcamp=    async (req, res,next)=> {
   // console.log(req.body);
@@ -137,10 +147,13 @@ exports.createBootcamp=    async (req, res,next)=> {
     data:bootcamp,
   });
   }catch(err){
-    next(new ErrorResponse(statusCodes.BAD_REQUEST,err.message))
+    return next(new ErrorResponse(statusCodes.BAD_REQUEST,err.message))
   }
 
 }
+
+//=======================================API #4======================================
+
 //@Desc    : Update  bootcamp
 //@Route   : PUT /api/v1/bootcamps/:id
 //@Access  : Private
@@ -148,54 +161,46 @@ exports.updateBootcamp= async (req, res,next)=> {
   const id=req.params.id;
   const bodyPrams=req.body;
   try{
-    const bootcamp= await Bootcamp.findOneAndUpdate({ _id: id },bodyPrams,{
+    const newBootcamp= await Bootcamp.findOneAndUpdate({ _id: id },bodyPrams,{
       new:true,
       runValidators:true
     })
-    if(!bootcamp){
-      next(new ErrorResponse(statusCodes.BAD_REQUEST,`Bootcamp not found with id of ${id}`))
+    if(!newBootcamp){
+      return next(new ErrorResponse(statusCodes.BAD_REQUEST,`Bootcamp not found with id of ${id}`))
 
     }
-    res.status(statusCodes.OK).json({
-     success: true,
-     data:bootcamp,
-   });
+      res.status(statusCodes.OK).json({
+        success: true,
+        data:newBootcamp,
+      });
+
    }catch(err){
-    next(new ErrorResponse(statusCodes.BAD_REQUEST,err.message))
+    return next(new ErrorResponse(statusCodes.BAD_REQUEST,err.message))
    }
 }
+//=======================================API #5======================================
+
 //@Desc    : Delete bootcamp
 //@Route   : DELETE /api/v1/bootcamps/:id
 //@Access  : Private
 exports.deleteBootcamp= async  (req, res,next)=> {
   const id=req.params.id;
-  const bodyPrams=req.body;
   try{
-    const bootcamp= await Bootcamp.findByIdAndDelete({ _id: id })
+    const bootcamp= await Bootcamp.findById(id);
     if(!bootcamp){
-      res.status(statusCodes.OK).json({
-        success: false,
-        msg: "Delete bootcamp fail - Not Found Bootcamp",
-      });
+      return next(new ErrorResponse(statusCodes.BAD_REQUEST,`Bootcamp not found with id of ${id}`))
+
     }
-    res.status(statusCodes.OK).json({
-     success: true,
-     msg: "Delete bootcamp success",
-     data:bootcamp,
-   });
-   }catch(exception){
-     res.status(statusCodes.BAD_REQUEST).json({
-       success: false,
-       msg: "Delete bootcamp fail",
-       err: exception,
- 
-     });
+    bootcamp.remove();//use cascade delete ref if use remove() method 
+      res.status(statusCodes.OK).json({
+        success: true,
+        data:bootcamp,
+      });
+
+   }catch(err){
+    return next(new ErrorResponse(statusCodes.BAD_REQUEST,err.message))
+
    }
 }
-exports.errorBootcamps= (req, res,next) =>{
-  res.status(404).json({
-    success: true,
-    msg: `Not Found API`,
-  });
-}
+
 module.exports;

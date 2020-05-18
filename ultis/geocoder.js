@@ -7,7 +7,7 @@ const options = {
   // formatter: null, // 'gpx', 'string', ...
   httpAdapter:"https"
 };
-console.log(process.env.GEOCODER_PROVIDER,process.env.GEOCODER_API_KEY,process.env.PORT);
+// console.log(process.env.GEOCODER_PROVIDER,process.env.GEOCODER_API_KEY,process.env.PORT);
 
 const geocoder = NodeGeocoder(options);
 //  geocoder.geocode('29 champs elysée paris').then(data=>{

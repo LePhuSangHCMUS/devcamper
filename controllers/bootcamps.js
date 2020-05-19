@@ -6,7 +6,7 @@ const Bootcamp=require("../models/Bootcamp")
 const ErrorResponse=require("../ultis/errorResponse");
 const { json } = require("express");
 
-
+const path =require('path')
 
 
 
@@ -178,7 +178,76 @@ exports.updateBootcamp= async (req, res,next)=> {
     return next(new ErrorResponse(statusCodes.BAD_REQUEST,err.message))
    }
 }
+
+
 //=======================================API #5======================================
+
+//@Desc    : Upload photo for  bootcamp
+//@Route   : PUT /api/v1/bootcamps/:id/photo
+//@Access  : Private
+exports.uploadPhotoBootcamp= async (req, res,next)=> {
+  const id=req.params.id;
+  try{
+    const bootcamp= await Bootcamp.findById(id);
+
+    if(!bootcamp){
+      return next(new ErrorResponse(statusCodes.BAD_REQUEST,`Bootcamp not found with id of ${id}`))
+
+    }
+
+    //==========================VALIDATION FILE===============================
+    if(!req.files || Object.keys(req.files).length === 0){
+      return next(new ErrorResponse(statusCodes.BAD_REQUEST,`Please upload a file`))
+
+    }
+
+    const file=req.files.file
+
+    console.log(file);
+  //Make sure the image is a photo
+    if(!file.mimetype.startsWith('image')){
+      return next(new ErrorResponse(statusCodes.BAD_REQUEST,`Please upload an image file`));
+
+    }
+  //Check filesize
+  if(file.size > process.env.MAX_FILE_UPLOAD){
+    return next(new ErrorResponse(statusCodes.BAD_REQUEST,`Please upload an image less than ${process.env.MAX_FILE_UPLOAD}`));
+
+  }
+
+  //make file name
+  const fileName=`photo_${id}${path.parse(file.name).ext}`;  
+  // Use the mv() method to place the file somewhere on your server
+      file.mv(`${process.env.FILE_UPLOAD_PATH}/${fileName}`,async  function(err) {
+        if (err){
+          return next(new ErrorResponse(statusCodes.INTERNAL_SERVER_ERROR,`Problem with file upload`));
+        }
+        try{
+          const newBootcamp= await Bootcamp.findByIdAndUpdate(id,{photo:fileName},{
+            new:true,
+            runValidators:true
+          });
+          if(!newBootcamp){
+            return next(new ErrorResponse(statusCodes.BAD_REQUEST,`Bootcamp not found with id of ${id}`))
+      
+          }
+            res.status(statusCodes.OK).json({
+              success: true,
+              data:newBootcamp,
+            });
+
+        }catch(err){
+          return next(new ErrorResponse(statusCodes.BAD_REQUEST,err.message));
+
+        }
+
+      });
+
+   }catch(err){
+    return next(new ErrorResponse(statusCodes.BAD_REQUEST,err.message))
+   }
+}
+//=======================================API #6======================================
 
 //@Desc    : Delete bootcamp
 //@Route   : DELETE /api/v1/bootcamps/:id

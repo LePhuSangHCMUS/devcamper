@@ -2,7 +2,7 @@ var express = require('express')
 var router = express.Router()
 
 //CONTROLLERS
-const {getBootcamps,getBootcamp,createBootcamp,updateBootcamp,deleteBootcamp}=require("../controllers/bootcamps");
+const {getBootcamps,getBootcamp,createBootcamp,updateBootcamp,deleteBootcamp,uploadPhotoBootcamp}=require("../controllers/bootcamps");
 //Include other resource routers
 const { getCourses, createCourse } = require('../controllers/courses');
 
@@ -32,4 +32,7 @@ route("/:id")
 .put(updateBootcamp)
 .delete(deleteBootcamp);  
 
+router.
+route("/:id/photo")
+.put(uploadPhotoBootcamp)
 module.exports=router

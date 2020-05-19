@@ -1,5 +1,6 @@
 var express = require("express");
 const dotenv = require("dotenv");
+const fileUpload = require('express-fileupload')
 //Connect DB
 const connectDB=require("./config/db");
 //Route files
@@ -28,6 +29,8 @@ if(process.env.NODE_ENV === "development"){
 
 }
 
+//0. Middleware file upload
+app.use(fileUpload());
 
 app.use(express.static('public'))
 

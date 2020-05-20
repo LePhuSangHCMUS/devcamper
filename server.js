@@ -52,7 +52,7 @@ app.use(xss())
 //Rate limit request 
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 1
+  max: 100
 });
 app.use(apiLimiter)
 

@@ -1,6 +1,7 @@
 var express = require('express')
 var router = express.Router()
-
+//MIDDLEWARE
+const {protect,authorize} =require("../middlewares/auth")
 //CONTROLLERS
 const {getBootcamps,getBootcamp,createBootcamp,updateBootcamp,deleteBootcamp,uploadPhotoBootcamp}=require("../controllers/bootcamps");
 //Include other resource routers
@@ -19,20 +20,20 @@ const { getCourses, createCourse } = require('../controllers/courses');
 router.
 route("/:bootcampId/courses")
 .get(getCourses)
-.post(createCourse)
+.post(protect,createCourse)
 
 //main
 router.
 route("/")
 .get(getBootcamps)
-.post(createBootcamp);
+.post(protect,authorize('publisher','admin'),createBootcamp);
 router.
 route("/:id")
-.get(getBootcamp)
-.put(updateBootcamp)
-.delete(deleteBootcamp);  
+.get(protect,getBootcamp)
+.put(protect,authorize('publisher','admin'),updateBootcamp)
+.delete(protect,authorize('publisher','admin'),deleteBootcamp);  
 
 router.
 route("/:id/photo")
-.put(uploadPhotoBootcamp)
+.put(protect,authorize('publisher','admin'),uploadPhotoBootcamp)
 module.exports=router

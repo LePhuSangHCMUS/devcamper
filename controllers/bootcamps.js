@@ -114,8 +114,7 @@ exports.getBootcamps= async (req, res,next)=> {
 //@Access  : Private
 exports.getBootcamp= async function (req, res,next) {
 const id=req.params.id;
- console.log(id);
- 
+ console.log(id); 
  try{
   const bootcamp= await Bootcamp.findById(id);
   if(!bootcamp){
@@ -140,6 +139,17 @@ const id=req.params.id;
 //@Access  : Private
 exports.createBootcamp=    async (req, res,next)=> {
   // console.log(req.body);
+
+  //add userId to req.body 
+  req.body.userId=req.user._id;
+  //Check for publisher bootcamp 
+  const publishedBootcamp=await Bootcamp.findOne({userId:req.user._id});
+  
+  //If the user is not an admin , they can only add one bootcamp
+  if(publishedBootcamp && req.user.role != 'admin'){
+    return next(new ErrorResponse(statusCodes.BAD_REQUEST,`The user with ID ${req.user._id} has already published a bootcamp`))
+ 
+  }
   try{
    const bootcamp= await Bootcamp.create(req.body);
    res.status(statusCodes.CREATED).json({
